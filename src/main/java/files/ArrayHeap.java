@@ -19,6 +19,7 @@ public class ArrayHeap <E extends Comparable <E>> implements PriorityQueue<E>{
      * Will insert an element while also re-organizing the list through the compare feature
      * @param element that will be inserted
      */
+    
   public void insert(E element) {
         //int count = size();
         if (heap.isEmpty()){
