@@ -205,6 +205,41 @@ public class ArrayHeap <E extends Comparable <E>> implements PriorityQueue<E>{
     }
 
     /**
+     * This function checks if the current max-heap data structure follows the nessasary conditions
+     * to be a proper max-heap
+     * Condition : 
+     * 1) Must be a full binary tree (left/rightchild) unless it is a leaf
+     * 2) the parent of any child must always be greater
+     * @return true if the conditions of the heap remains entact, false if otherwise
+     */
+    public boolean checkinvariant(){
+        //ArrayHeap<E> maxHeap
+        //maxHeap should be the one that is currently under the shared constructor
+        for (int i=0; i < heap.size(); i++){
+            int left = leftChild(i);
+            int right = rightChild(i);
+            //detects if the right and left child are greatere than the parent - a violation of max-heap!!!!!!!
+            if (left < heap.size() && heap.get(i).compareTo(heap.get(left)) < 0){
+                return false;
+            }
+            if (right < heap.size() && heap.get(i).compareTo(heap.get(right)) < 0){
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * As a way to violate the structure of a max heap, a the value of a leaf will be copy onto the root of the heap.
+     * @return Nothing, will copy the value from a leaf to the root
+     */
+    public void corruptheap(){
+        int leaf = heap.size() - 1;
+        if (leaf >= 0 && leaf < heap.size()){
+            heap.set(0,heap.get(leaf));
+        }
+    }
+    /**
      * This will print an array heap based on levels of a binary heap.
      * @return a printed array heap
      */
