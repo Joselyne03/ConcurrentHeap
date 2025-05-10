@@ -7,7 +7,12 @@
 
 package files;
 import java.util.ArrayList;
+//import java.util.concurrent.Semaphore;
 public class ArrayHeap <E extends Comparable <E>> implements PriorityQueue<E>{
+    public static final String ANSI_PURPLE = "\u001B[35m";
+
+    private final Object lock = new Object();
+    //testing out how to use 2 threads at the same time 
     private ArrayList<E> heap ;// this represents the heap that we will resize
 
     public ArrayHeap (){
@@ -17,17 +22,19 @@ public class ArrayHeap <E extends Comparable <E>> implements PriorityQueue<E>{
 
     /**
      * Will insert an element while also re-organizing the list through the compare feature
+     * MUST BE SYNC
      * @param element that will be inserted
      */
     
-  public void insert(E element) {
-        //int count = size();
-        if (heap.isEmpty()){
-            heap.add(element);
-        }else{
-       heap.add(element);
-       bubbleUp(size()-1);}
-    }
+    public void insert(E element) {
+            synchronized(lock){
+                    if (heap.isEmpty()){
+                        heap.add(element);
+                    }else{
+                        heap.add(element);
+                        bubbleUp(size()-1);}
+            }
+        }
 
     /**
      * Return the root of a heap
@@ -44,26 +51,33 @@ public class ArrayHeap <E extends Comparable <E>> implements PriorityQueue<E>{
 
     /**
      * Will remove the root of a heap and also re-organize the heap but bubbling down the re-assigned index
+     * MUST BE SYNC
      * @return the removed index
      */
     public E removeMax() {
-        E oldMax = max();
-        int lastIndex = heap.size() - 1;
-        if(heap.size() == 1){
-            heap.remove(lastIndex);
-            return oldMax;
-        }else {
-            lastIndex = heap.size() - 1;
-            heap.set(0, heap.get(lastIndex));
-            heap.remove(lastIndex);
-            bubbleDown(0);
-            return oldMax;
+        synchronized(lock){
+            E oldMax = max();
+            int lastIndex = heap.size() - 1;
+            if (oldMax == null){
+                return null;
+            }else if(heap.size() == 1){
+                heap.remove(lastIndex);
+                return oldMax;
+            }else {
+                lastIndex = heap.size() - 1;
+                heap.set(0, heap.get(lastIndex));
+                heap.remove(lastIndex);
+                bubbleDown(0);
+                return oldMax;
+            }
         }
     }
 
     public int size() {
-        int c = heap.toArray().length;
-        return c;
+        synchronized(lock){
+            int c = heap.toArray().length;
+            return c;
+        }
     }
 
     public boolean isEmpty() {
@@ -194,7 +208,8 @@ public class ArrayHeap <E extends Comparable <E>> implements PriorityQueue<E>{
      * @return A new sorted Array List
      */
     public ArrayList<E> sort(ArrayList<E> array) {
-        buildMaxHeap(array);
+        synchronized(lock){
+            buildMaxHeap(array);
         ArrayList<E> sorted = new ArrayList<E>();
         int size = heap.size();
         for (int i = 0; i < size; i++) {
@@ -202,6 +217,7 @@ public class ArrayHeap <E extends Comparable <E>> implements PriorityQueue<E>{
             sorted.add(removeMax());
         }
         return sorted;
+        }
     }
 
     /**
@@ -213,20 +229,21 @@ public class ArrayHeap <E extends Comparable <E>> implements PriorityQueue<E>{
      * @return true if the conditions of the heap remains entact, false if otherwise
      */
     public boolean checkinvariant(){
-        //ArrayHeap<E> maxHeap
         //maxHeap should be the one that is currently under the shared constructor
-        for (int i=0; i < heap.size(); i++){
-            int left = leftChild(i);
-            int right = rightChild(i);
-            //detects if the right and left child are greatere than the parent - a violation of max-heap!!!!!!!
-            if (left < heap.size() && heap.get(i).compareTo(heap.get(left)) < 0){
-                return false;
+        synchronized(lock){
+            for (int i=0; i < heap.size(); i++){
+                int left = leftChild(i);
+                int right = rightChild(i);
+                //detects if the right and left child are greatere than the parent - a violation of max-heap!!!!!!!
+                if (left < heap.size() && heap.get(i).compareTo(heap.get(left)) < 0){
+                    return false;
+                }
+                if (right < heap.size() && heap.get(i).compareTo(heap.get(right)) < 0){
+                    return false;
+                }
             }
-            if (right < heap.size() && heap.get(i).compareTo(heap.get(right)) < 0){
-                return false;
-            }
+            return true;
         }
-        return true;
     }
 
     /**
@@ -236,9 +253,10 @@ public class ArrayHeap <E extends Comparable <E>> implements PriorityQueue<E>{
     public void corruptheap(){
         int leaf = heap.size() - 1;
         if (leaf >= 0 && leaf < heap.size()){
-            heap.set(0,heap.get(leaf));
+            this.swap(0,leaf);
         }
     }
+    
     /**
      * This will print an array heap based on levels of a binary heap.
      * @return a printed array heap

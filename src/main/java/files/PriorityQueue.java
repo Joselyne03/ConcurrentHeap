@@ -1,6 +1,6 @@
 package files;
 public interface PriorityQueue<E extends Comparable<E>> {
-    void insert(E element);
+    void insert(E element) throws InterruptedException;
 
     E max();
 
